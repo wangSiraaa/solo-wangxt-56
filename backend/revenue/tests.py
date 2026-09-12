@@ -176,6 +176,10 @@ class WorkflowTest(BaseData):
         services.publish(v)
         detail = v.details.get(owner_name="李四")
         services.add_dispute(detail, Decimal("200"), "天数异议")
+        # 异议提出后冻结额立即反映到明细(无需等结转)
+        detail.refresh_from_db()
+        self.assertEqual(detail.frozen_amount, Decimal("200.00"))
+        self.assertEqual(detail.payable, Decimal("1277.90"))
         with self.assertRaisesMessage(ValidationError, "不能超过"):
             services.add_dispute(detail, detail.amount, "超额冻结")
         cf = services.carry_forward(v)
@@ -218,3 +222,39 @@ class WorkflowTest(BaseData):
         v2 = services.generate_allocation(new_rule)
         self.assertTrue(v2.details.exists())
         self.assertEqual({d.unit for d in v2.details.all()}, {self.u101})
+
+
+class ApiTest(BaseData):
+    """版本列表/规则接口必须输出 contract_id 与实际受益楼栋,供前端过滤与展示。"""
+
+    def test_version_list_contains_contract_id_and_buildings(self):
+        rule = self.make_rule(scope_type="BUILDINGS")
+        rule.buildings.set([self.b1, self.b2])
+        services.generate_allocation(rule)
+        data = self.client.get("/api/versions/").json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["contract_id"], self.contract.id)
+        self.assertEqual(data[0]["building_names"], ["1号楼", "2号楼"])
+        self.assertEqual(data[0]["scope_display"], "指定楼栋")
+
+    def test_rule_detail_contains_building_names(self):
+        rule = self.make_rule(scope_type="BUILDINGS")
+        rule.buildings.set([self.b1])
+        data = self.client.get(f"/api/rules/{rule.id}/").json()
+        self.assertEqual(data["building_names"], ["1号楼"])
+
+    def test_dispute_visible_on_published_detail(self):
+        self.attach()
+        v = services.generate_allocation(self.make_rule(publication_days=7))
+        services.publish(v)
+        detail = v.details.get(owner_name="李四")
+        self.client.post(f"/api/details/{detail.id}/disputes/",
+                         {"amount": "200.00", "reason": "天数异议"},
+                         content_type="application/json")
+        data = self.client.get(f"/api/versions/{v.id}/").json()
+        row = next(d for d in data["details"] if d["owner_name"] == "李四")
+        self.assertEqual(row["frozen_amount"], "200.00")
+        self.assertEqual(row["payable"], "1277.90")
+        # 公示期内结转仍被拒绝
+        resp = self.client.post(f"/api/versions/{v.id}/carry_forward/", {})
+        self.assertEqual(resp.status_code, 400)

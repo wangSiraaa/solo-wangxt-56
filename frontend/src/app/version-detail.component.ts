@@ -19,7 +19,9 @@ import { ApiService, Detail, Trace, Version } from './api.service';
         <p>合同:{{ trace.contract.name }} ｜ 总额 ¥{{ trace.contract.total_amount }}
            ｜ 归属期 {{ trace.contract.period_start }} ~ {{ trace.contract.period_end }}
            ｜ 收款日期 {{ trace.contract.received_date }}</p>
-        <p>适用范围:分摊规则 v{{ trace.rule_version }} ｜ 分配合计 ¥{{ version.allocated_total }}
+        <p>适用范围:{{ version.scope_display }}<span *ngIf="version.building_names.length">:{{ version.building_names.join('、') }}</span>
+           ｜ 分摊方式:{{ version.method_display }} ｜ 分摊规则 v{{ trace.rule_version }}
+           ｜ 分配合计 ¥{{ version.allocated_total }}
            <ng-container *ngIf="+version.unallocated_amount > 0">
              ｜ <span class="remainder">份额不足未分配结余 ¥{{ version.unallocated_amount }}</span>
            </ng-container>

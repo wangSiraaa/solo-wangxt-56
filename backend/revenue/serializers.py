@@ -65,12 +65,18 @@ class RuleShareSerializer(serializers.ModelSerializer):
 class RuleSerializer(serializers.ModelSerializer):
     shares = RuleShareSerializer(many=True, read_only=True)
     buildings = serializers.PrimaryKeyRelatedField(many=True, queryset=Building.objects.all())
+    building_names = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="name", source="buildings"
+    )
+    scope_display = serializers.CharField(source="get_scope_type_display", read_only=True)
+    method_display = serializers.CharField(source="get_method_display", read_only=True)
 
     class Meta:
         model = AllocationRule
         fields = [
             "id", "contract", "version_no", "supersedes", "is_active",
-            "scope_type", "buildings", "method", "exclude_vacant", "vacant_basis",
+            "scope_type", "scope_display", "buildings", "building_names",
+            "method", "method_display", "exclude_vacant", "vacant_basis",
             "shortfall_policy", "publication_days", "shares", "created_at",
         ]
 
@@ -122,6 +128,11 @@ class VersionSerializer(serializers.ModelSerializer):
     contract_id = serializers.IntegerField(source="rule.contract_id", read_only=True)
     rule_version_no = serializers.IntegerField(source="rule.version_no", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    scope_display = serializers.CharField(source="rule.get_scope_type_display", read_only=True)
+    method_display = serializers.CharField(source="rule.get_method_display", read_only=True)
+    building_names = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="name", source="rule.buildings"
+    )
 
     class Meta:
         model = AllocationVersion
@@ -129,17 +140,24 @@ class VersionSerializer(serializers.ModelSerializer):
             "id", "rule", "contract_id", "contract_name", "rule_version_no",
             "version_no", "status", "status_display", "allocated_total",
             "unallocated_amount", "computed_at", "published_at",
+            "scope_display", "method_display", "building_names",
             "details", "carry_forward",
         ]
 
 
 class VersionListSerializer(serializers.ModelSerializer):
+    contract_id = serializers.IntegerField(source="rule.contract_id", read_only=True)
     contract_name = serializers.CharField(source="rule.contract.name", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    scope_display = serializers.CharField(source="rule.get_scope_type_display", read_only=True)
+    building_names = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="name", source="rule.buildings"
+    )
 
     class Meta:
         model = AllocationVersion
         fields = [
-            "id", "rule", "contract_name", "version_no", "status", "status_display",
-            "allocated_total", "unallocated_amount", "computed_at", "published_at",
+            "id", "rule", "contract_id", "contract_name", "version_no",
+            "status", "status_display", "allocated_total", "unallocated_amount",
+            "computed_at", "published_at", "scope_display", "building_names",
         ]

@@ -242,7 +242,11 @@ def add_dispute(detail: AllocationDetail, amount: Decimal, reason: str) -> Dispu
     )
     if open_frozen + amount > detail.amount:
         raise ValidationError("异议冻结合计不能超过该明细金额")
-    return Dispute.objects.create(detail=detail, amount=amount, reason=reason)
+    dispute = Dispute.objects.create(detail=detail, amount=amount, reason=reason)
+    # 冻结额实时反映到明细,公示期间即可看到冻结与可付
+    detail.frozen_amount = open_frozen + amount
+    detail.save(update_fields=["frozen_amount"])
+    return dispute
 
 
 @transaction.atomic

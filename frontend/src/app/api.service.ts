@@ -10,8 +10,10 @@ export interface Contract {
 }
 export interface Rule {
   id: number; contract: number; version_no: number; is_active: boolean;
-  scope_type: string; method: string; exclude_vacant: boolean;
-  shortfall_policy: string; publication_days: number; buildings: number[];
+  scope_type: string; scope_display: string; method: string; method_display: string;
+  exclude_vacant: boolean; shortfall_policy: string; publication_days: number;
+  buildings: number[]; building_names: string[];
+  shares: { id: number; unit: number; unit_code: string; share: string }[];
 }
 export interface Dispute { id: number; amount: string; reason: string; status: string; }
 export interface Adjustment { id: number; delta: string; reason: string; created_at: string; }
@@ -26,8 +28,16 @@ export interface Version {
   rule_version_no: number; version_no: number; status: string; status_display: string;
   allocated_total: string; unallocated_amount: string;
   computed_at: string; published_at: string | null;
+  scope_display: string; method_display: string; building_names: string[];
   details: Detail[];
   carry_forward: { amount: string; frozen_total: string; carried_at: string; adjustments: Adjustment[] } | null;
+}
+export interface VersionListItem {
+  id: number; rule: number; contract_id: number; contract_name: string;
+  version_no: number; status: string; status_display: string;
+  allocated_total: string; unallocated_amount: string;
+  computed_at: string; published_at: string | null;
+  scope_display: string; building_names: string[];
 }
 export interface Trace {
   contract: { id: number; name: string; total_amount: string; period_start: string; period_end: string; received_date: string; };
@@ -49,7 +59,7 @@ export class ApiService {
   }
   rules(): Observable<Rule[]> { return this.http.get<Rule[]>(`${this.base}/rules/`); }
   generate(ruleId: number): Observable<Version> { return this.http.post<Version>(`${this.base}/rules/${ruleId}/generate/`, {}); }
-  versions(): Observable<Version[]> { return this.http.get<Version[]>(`${this.base}/versions/`); }
+  versions(): Observable<VersionListItem[]> { return this.http.get<VersionListItem[]>(`${this.base}/versions/`); }
   version(id: number): Observable<Version> { return this.http.get<Version>(`${this.base}/versions/${id}/`); }
   trace(id: number): Observable<Trace> { return this.http.get<Trace>(`${this.base}/versions/${id}/trace/`); }
   publish(id: number): Observable<Version> { return this.http.post<Version>(`${this.base}/versions/${id}/publish/`, {}); }

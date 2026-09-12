@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ApiService, Contract, Rule, Version } from './api.service';
+import { ApiService, Contract, Rule, VersionListItem } from './api.service';
 
 @Component({
   standalone: true,
@@ -25,12 +25,17 @@ import { ApiService, Contract, Rule, Version } from './api.service';
 
       <h3>分摊规则</h3>
       <table>
-        <thead><tr><th>版本</th><th>范围</th><th>方式</th><th>份额不足策略</th><th>公示天数</th><th>状态</th><th></th></tr></thead>
+        <thead><tr><th>版本</th><th>受益范围</th><th>方式</th><th>份额不足策略</th><th>公示天数</th><th>状态</th><th></th></tr></thead>
         <tbody>
           <tr *ngFor="let r of rules">
             <td>v{{ r.version_no }}</td>
-            <td>{{ r.scope_type === 'ALL' ? '全体业主' : '指定楼栋' }}</td>
-            <td>{{ r.method === 'BY_AREA' ? '按面积' : '固定份额' }}</td>
+            <td>
+              {{ r.scope_display }}<span *ngIf="r.building_names.length">:{{ r.building_names.join('、') }}</span>
+              <div class="muted" *ngIf="r.shares.length">
+                份额:<span *ngFor="let s of r.shares">{{ s.unit_code }} {{ +s.share * 100 }}% </span>
+              </div>
+            </td>
+            <td>{{ r.method_display }}</td>
             <td>{{ r.shortfall_policy === 'RESERVE' ? '结余留存' : '按比例放大' }}</td>
             <td>{{ r.publication_days }}</td>
             <td>{{ r.is_active ? '当前有效' : '已作废' }}</td>
@@ -41,16 +46,18 @@ import { ApiService, Contract, Rule, Version } from './api.service';
 
       <h3>已生成版本</h3>
       <table>
-        <thead><tr><th>版本</th><th>状态</th><th>分配合计</th><th>未分配结余</th><th>生成时间</th><th></th></tr></thead>
+        <thead><tr><th>版本</th><th>状态</th><th>受益范围</th><th>分配合计</th><th>未分配结余</th><th>生成时间</th><th></th></tr></thead>
         <tbody>
           <tr *ngFor="let v of versions">
-            <td>v{{ v.version_no }} (规则v{{ v.rule_version_no }})</td>
+            <td>v{{ v.version_no }}</td>
             <td><span class="badge" [ngClass]="v.status">{{ v.status_display }}</span></td>
+            <td>{{ v.scope_display }}<span *ngIf="v.building_names.length">:{{ v.building_names.join('、') }}</span></td>
             <td>¥{{ v.allocated_total }}</td>
             <td><span [class.remainder]="+v.unallocated_amount > 0">¥{{ v.unallocated_amount }}</span></td>
             <td>{{ v.computed_at | date:'yyyy-MM-dd HH:mm' }}</td>
             <td><a [routerLink]="['/versions', v.id]">明细</a></td>
           </tr>
+          <tr *ngIf="!versions.length"><td colspan="7" class="muted">尚未生成版本,请先在上方规则行点击"生成公示版本"</td></tr>
         </tbody>
       </table>
     </ng-container>
@@ -61,7 +68,7 @@ export class ContractDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   contract?: Contract;
   rules: Rule[] = [];
-  versions: Version[] = [];
+  versions: VersionListItem[] = [];
   error = '';
   private id = 0;
 
