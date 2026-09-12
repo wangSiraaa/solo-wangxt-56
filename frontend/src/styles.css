@@ -1,0 +1,22 @@
+body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; background: #f5f6f8; color: #222; }
+nav { background: #1f3a5f; color: #fff; padding: 12px 24px; display: flex; gap: 20px; align-items: center; }
+nav a { color: #cfe0f5; text-decoration: none; }
+nav a.active, nav a:hover { color: #fff; font-weight: 600; }
+nav .brand { font-size: 17px; font-weight: 700; margin-right: 16px; }
+main { padding: 20px 28px; }
+table { border-collapse: collapse; width: 100%; background: #fff; margin: 12px 0; }
+th, td { border: 1px solid #e2e5ea; padding: 7px 10px; font-size: 13px; text-align: left; }
+th { background: #eef2f7; }
+.card { background: #fff; border: 1px solid #e2e5ea; border-radius: 6px; padding: 16px 18px; margin-bottom: 16px; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #e8eef7; }
+.badge.PUBLISHED { background: #fff3cd; }
+.badge.CARRIED { background: #d4edda; }
+.badge.DRAFT { background: #e2e3e5; }
+.remainder { color: #b02a37; font-weight: 600; }
+.frozen { color: #b02a37; }
+button { background: #1f3a5f; color: #fff; border: 0; border-radius: 4px; padding: 5px 14px; cursor: pointer; font-size: 13px; }
+button:disabled { background: #9aa5b1; cursor: not-allowed; }
+input, select { padding: 4px 6px; border: 1px solid #c8ced6; border-radius: 4px; font-size: 13px; }
+.muted { color: #6b7684; font-size: 12px; }
+.error { color: #b02a37; margin: 8px 0; }
+h2 { font-size: 18px; } h3 { font-size: 15px; }
